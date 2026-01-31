@@ -1,0 +1,35 @@
+# we will use the requests library to make HTTP requests to the API
+# and the pandas library to work with the tabular data
+
+# store the ArcGIS Feature Service endpoint for Improve Detroit Issues data
+base_url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/improve_detroit/FeatureServer/0/query"
+
+# a dictionary of query parameters
+params = {
+    'where': 'OBJECTID > 0',  # filter for everything
+    'outFields': '*',         # return all fields
+    'f': 'json',              # return data in json format
+    'returnGeometry': 'true'  # include location data
+}
+
+# http get request to API with the url and parameters
+response = requests.get(base_url, params=params)
+
+# convert response into a python dictionary
+data = response.json()
+
+# initialize empty list to store the records we extract
+records = []
+
+# loop through each feature/record
+for feature in data['features']:
+    # extract attributes of each record by taking a copy
+    record = feature['attributes'].copy()
+    if 'geometry' in feature and feature['geometry']:
+        record['longitude'] = feature['geometry'].get('x')
+        record['latitude'] = feature['geometry'].get('y')
+    records.append(record)
+
+improve_detroit_df = pd.DataFrame(records)
+print(f"Retrieved {len(df)} records")
+print(df.head())
